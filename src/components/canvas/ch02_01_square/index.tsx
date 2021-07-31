@@ -98,6 +98,15 @@ const Canvas = () => {
     gl.current.bindVertexArray(null)
   }
 
+  const setCanvasSize = () => {
+    if (!gl.current || !canvas.current) {
+      return
+    }
+    const dpr = window.devicePixelRatio || 1
+    canvas.current.width = window.innerWidth * dpr
+    canvas.current.height = window.innerHeight * dpr
+  }
+
   const init = () => {
     if (!canvas.current) {
       alert('Sorry! No HTML5 Canvas was found on this page')
@@ -111,13 +120,17 @@ const Canvas = () => {
       return
     }
 
-    const dpr = window.devicePixelRatio || 1
-    gl.current.canvas.width  = canvas.current.clientWidth * dpr
-    gl.current.canvas.height = canvas.current.clientHeight * dpr
+    setCanvasSize()
 
     initProgram()
     initBuffers()
     draw()
+
+    window.addEventListener('resize', setCanvasSize)
+
+    return () => {
+      window.removeEventListener('resize', setCanvasSize)
+    }
   }
 
   useEffect(() => {
