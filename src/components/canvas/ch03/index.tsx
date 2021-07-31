@@ -1,6 +1,7 @@
 import { createRef, useEffect, useRef } from 'react'
 import { mat4 } from 'gl-matrix'
 
+import GUI from '../../gui'
 import useSteUp from '../../../hooks/useSetup'
 
 import vt from './ch03.vert'
@@ -9,19 +10,47 @@ import sphere from './sphere.json'
 
 const { vertices, indices } = sphere
 
+interface Uniforms {
+  modelViewMatrix: mat4
+  projectionMatrix: mat4
+  normalMatrix: mat4
+  lightDirection: [ number, number, number ]
+  lightDiffuse: [ number, number, number ]
+  materialDiffuse: [ number, number, number ]
+}
+interface UniformLocations {
+  uProjectionMatrix: WebGLUniformLocation | null
+  uModelViewMatrix: WebGLUniformLocation | null
+  uNormalMatrix: WebGLUniformLocation | null
+  uLightDirection: WebGLUniformLocation | null
+  uLightDiffuse: WebGLUniformLocation | null
+  uMaterialDiffuse: WebGLUniformLocation | null
+}
+
 const Canvas = () => {
   const canvas = createRef<HTMLCanvasElement>()
   const gl = useRef<WebGL2RenderingContext | null>()
   const program = useRef<WebGLProgram | null>()
   const sphereVAO = useRef<WebGLVertexArrayObject | null>()
-  // matrix
-  const modelViewMatrix = useRef(mat4.create())
-  const projectionMatrix = useRef(mat4.create())
-  const normalMatrix = useRef(mat4.create())
+
   // uniform
-  const uProjectionMatrix = useRef<WebGLUniformLocation | null>()
-  const uModelViewMatrix = useRef<WebGLUniformLocation | null>()
-  const uNormalMatrix = useRef<WebGLUniformLocation | null>()
+  const uniforms = useRef<Uniforms>({
+    modelViewMatrix: mat4.create(),
+    projectionMatrix: mat4.create(),
+    normalMatrix: mat4.create(),
+    lightDirection: [ 0, -1, -1 ],
+    lightDiffuse: [ 1, 1, 1 ],
+    materialDiffuse: [ 0.5, 0.8, 0.1 ],
+  })
+
+  const uLocations = useRef<UniformLocations>({
+    uModelViewMatrix: null,
+    uProjectionMatrix: null,
+    uNormalMatrix: null,
+    uLightDirection: null,
+    uLightDiffuse: null,
+    uMaterialDiffuse: null,
+  })
 
   const { setProgram, calculateNormals } = useSteUp()
 
@@ -37,9 +66,12 @@ const Canvas = () => {
 
     setProgram(vt, fg, gl.current, program.current)
 
-    uProjectionMatrix.current = gl.current.getUniformLocation(program.current, 'uProjectionMatrix')
-    uModelViewMatrix.current = gl.current.getUniformLocation(program.current, 'uModelViewMatrix')
-    uNormalMatrix.current = gl.current.getUniformLocation(program.current, 'uNormalMatrix')
+    uLocations.current.uProjectionMatrix = gl.current.getUniformLocation(program.current, 'uProjectionMatrix')
+    uLocations.current.uModelViewMatrix = gl.current.getUniformLocation(program.current, 'uModelViewMatrix')
+    uLocations.current.uNormalMatrix = gl.current.getUniformLocation(program.current, 'uNormalMatrix')
+    uLocations.current.uLightDirection = gl.current.getUniformLocation(program.current, 'uLightDirection')
+    uLocations.current.uLightDiffuse = gl.current.getUniformLocation(program.current, 'uLightDiffuse')
+    uLocations.current.uMaterialDiffuse = gl.current.getUniformLocation(program.current, 'uMaterialDiffuse')
   }
 
   const initLights = () => {
@@ -47,16 +79,16 @@ const Canvas = () => {
       return
     }
     gl.current.uniform3fv(
-      gl.current.getUniformLocation(program.current, 'uLightDirection'),
-      [ 0, -1, -1 ],
+      uLocations.current.uLightDirection,
+      uniforms.current.lightDirection,
     )
     gl.current.uniform3fv(
-      gl.current.getUniformLocation(program.current, 'uLightDiffuse'),
-      [ 1, 1, 1 ],
+      uLocations.current.uLightDiffuse,
+      uniforms.current.lightDiffuse,
     )
     gl.current.uniform3fv(
-      gl.current.getUniformLocation(program.current, 'uMaterialDiffuse'),
-      [ 0.5, 0.8, 0.1 ],
+      uLocations.current.uMaterialDiffuse,
+      uniforms.current.materialDiffuse,
     )
   }
 
@@ -125,9 +157,6 @@ const Canvas = () => {
     if (
       !gl.current
       || !sphereVAO.current
-      || !uModelViewMatrix.current
-      || !uProjectionMatrix.current
-      || !uNormalMatrix.current
     ) {
       return
     }
@@ -135,18 +164,38 @@ const Canvas = () => {
     gl.current.clear(gl.current.COLOR_BUFFER_BIT | gl.current.DEPTH_BUFFER_BIT)
     gl.current.viewport(0, 0, gl.current.canvas.width, gl.current.canvas.height)
 
-    mat4.identity(modelViewMatrix.current)
-    mat4.translate(modelViewMatrix.current, modelViewMatrix.current, [ 0, 0, -1.5 ])
-    mat4.perspective(
-      projectionMatrix.current, 45, gl.current.canvas.width / gl.current.canvas.height, 0.1, 10000,
+    mat4.identity(uniforms.current.modelViewMatrix)
+    mat4.translate(
+      uniforms.current.modelViewMatrix,
+      uniforms.current.modelViewMatrix,
+      [ 0, 0, -1.5 ],
     )
-    mat4.copy(normalMatrix.current, modelViewMatrix.current)
-    mat4.invert(normalMatrix.current, normalMatrix.current)
-    mat4.transpose(normalMatrix.current, normalMatrix.current)
+    mat4.perspective(
+      uniforms.current.projectionMatrix,
+      45,
+      gl.current.canvas.width / gl.current.canvas.height,
+      0.1,
+      10000,
+    )
+    mat4.copy(uniforms.current.normalMatrix, uniforms.current.modelViewMatrix)
+    mat4.invert(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
+    mat4.transpose(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
 
-    gl.current.uniformMatrix4fv(uModelViewMatrix.current, false, modelViewMatrix.current)
-    gl.current.uniformMatrix4fv(uProjectionMatrix.current, false, projectionMatrix.current)
-    gl.current.uniformMatrix4fv(uNormalMatrix.current, false, normalMatrix.current)
+    gl.current.uniformMatrix4fv(
+      uLocations.current.uModelViewMatrix,
+      false,
+      uniforms.current.modelViewMatrix,
+    )
+    gl.current.uniformMatrix4fv(
+      uLocations.current.uProjectionMatrix,
+      false,
+      uniforms.current.projectionMatrix,
+    )
+    gl.current.uniformMatrix4fv(
+      uLocations.current.uNormalMatrix,
+      false,
+      uniforms.current.normalMatrix,
+    )
 
     try {
       gl.current.bindVertexArray(sphereVAO.current)
@@ -189,6 +238,7 @@ const Canvas = () => {
 
     setCanvasSize()
 
+    gl.current.enable(gl.current.DEPTH_TEST)
     initProgram()
     initBuffers()
     initLights()
@@ -206,11 +256,12 @@ const Canvas = () => {
   }, [])
 
   return (
-    <div className="fixed inset-0 -z-1 bg-black pointer-events-none">
+    <div className="fixed inset-0 -z-1 bg-white pointer-events-none">
       <canvas
         ref={canvas}
         className="w-full h-full"
       />
+      <GUI setOpts={{}} opts={{}} />
     </div>
   )
 }
