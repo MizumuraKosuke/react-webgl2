@@ -2,8 +2,8 @@ import { createRef, useEffect, useRef } from 'react'
 
 import useSteUp from '../../../hooks/useSetup'
 
-import vt from './ch02_01_square.vert'
-import fg from './ch02_01_square.frag'
+import vt from './ch03.vert'
+import fg from './ch03.frag'
 
 const Canvas = () => {
   const canvas = createRef<HTMLCanvasElement>()
