@@ -4,7 +4,12 @@ module.exports = {
   theme: {
     extend: {
       zIndex: {
-        '-10': '-10',
+        '-1': '-1',
+        '-2': '-2',
+      },
+      colors: {
+        black: '#000',
+        white: '#fff',
       },
     },
   },

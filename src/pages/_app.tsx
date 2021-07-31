@@ -1,15 +1,11 @@
 import type { AppProps } from 'next/app'
 import 'tailwindcss/tailwind.css'
 
-import Layout from '../views/layout'
-
 import '../styles/globals.scss'
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <Component {...pageProps} />
   )
 }
 export default MyApp
