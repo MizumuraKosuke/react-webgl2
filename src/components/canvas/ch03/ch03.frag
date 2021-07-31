@@ -1,10 +1,13 @@
 #version 300 es
 precision mediump float;
 
-// Color that is the result of this shader
+// Expect the interpolated value from the vertex shader
+in vec4 vVertexColor;
+
+// Return the final color as fragColor
 out vec4 fragColor;
 
-void main(void) {
-  // Set the result as red
-  fragColor = vec4(1.0, .0, .0, 1.0);
+void main(void)  {
+  // Simply set the value passed in from the vertex shader
+  fragColor = vVertexColor;
 }
