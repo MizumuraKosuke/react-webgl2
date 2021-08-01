@@ -24,6 +24,13 @@ const Home = () => {
                 </a>
               </Link>
             </li>
+            <li className="pl-2">
+              <Link href="/ch03/goraudPhong">
+                <a>
+                  <span>フォン反射を伴うグローシェーディング</span>
+                </a>
+              </Link>
+            </li>
           </ul>
         </li>
       </ul>

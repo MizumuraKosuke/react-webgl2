@@ -4,18 +4,23 @@ import { mat4 } from 'gl-matrix'
 import GUI from './gui'
 import useSteUp from '../../../../hooks/useSetup'
 
-import vt from './goraudLumbert.vert'
-import fg from './goraudLumbert.frag'
+import vt from './goraudPhong.vert'
+import fg from './goraudPhong.frag'
 import sphere from '../sphere.json'
 
 const { vertices, indices } = sphere
 
 interface Opts {
-  materialDiffuse: string
   lightDiffuse: string
+  lightAmbient: number
+  lightSpecular: number
   dirX: number
   dirY: number
   dirZ: number
+  materialDiffuse: string
+  materialAmbient: number
+  materialSpecular: number
+  shininess: number
 }
 
 interface Uniforms {
@@ -23,16 +28,26 @@ interface Uniforms {
   projectionMatrix: mat4
   normalMatrix: mat4
   lightDirection: [ number, number, number ]
-  lightDiffuse: [ number, number, number ]
-  materialDiffuse: [ number, number, number ]
+  lightAmbient: [ number, number, number, number ]
+  lightDiffuse: [ number, number, number, number ]
+  lightSpecular: [ number, number, number, number ]
+  materialAmbient: [ number, number, number, number ]
+  materialDiffuse: [ number, number, number, number ]
+  materialSpecular: [ number, number, number, number ]
+  shininess: number
 }
 interface UniformLocations {
   uProjectionMatrix: WebGLUniformLocation | null
   uModelViewMatrix: WebGLUniformLocation | null
   uNormalMatrix: WebGLUniformLocation | null
   uLightDirection: WebGLUniformLocation | null
+  uLightAmbient: WebGLUniformLocation | null
   uLightDiffuse: WebGLUniformLocation | null
+  uLightSpecular: WebGLUniformLocation | null
+  uMaterialAmbient: WebGLUniformLocation | null
   uMaterialDiffuse: WebGLUniformLocation | null
+  uMaterialSpecular: WebGLUniformLocation | null
+  uShininess: WebGLUniformLocation | null
 }
 
 // sync with essl layout
@@ -59,9 +74,14 @@ const Canvas = () => {
     modelViewMatrix: mat4.create(),
     projectionMatrix: mat4.create(),
     normalMatrix: mat4.create(),
-    lightDirection: [ 0, -1, -1 ],
-    lightDiffuse: [ 1, 1, 1 ],
-    materialDiffuse: [ 0.5, 0.8, 0.1 ],
+    lightDirection: [ -0.25, -0.25, -0.25 ],
+    lightAmbient: [ 0.03, 0.03, 0.03, 1 ],
+    lightDiffuse: [ 46 / 256, 99 / 256, 191 / 256, 1 ],
+    materialAmbient: [ 1, 1, 1, 1 ],
+    materialDiffuse: [ 1, 1, 1, 1 ],
+    materialSpecular: [ 1, 1, 1, 1 ],
+    shininess: 10,
+    lightSpecular: [ 1, 1, 1, 1 ],
   })
 
   const uLocations = useRef<UniformLocations>({
@@ -69,16 +89,34 @@ const Canvas = () => {
     uProjectionMatrix: null,
     uNormalMatrix: null,
     uLightDirection: null,
+    uLightAmbient: null,
     uLightDiffuse: null,
+    uMaterialAmbient: null,
     uMaterialDiffuse: null,
+    uMaterialSpecular: null,
+    uShininess: null,
+    uLightSpecular: null,
   })
 
-  const [ guiData, setGuiData ] = useState({
-    materialDiffuse: normalizeRGB2hex(uniforms.current.materialDiffuse),
-    lightDiffuse: normalizeRGB2hex(uniforms.current.lightDiffuse),
+  const [ guiData, setGuiData ] = useState<Opts>({
+    lightDiffuse: normalizeRGB2hex([
+      uniforms.current.lightDiffuse[0],
+      uniforms.current.lightDiffuse[1],
+      uniforms.current.lightDiffuse[2],
+    ]),
+    lightAmbient: uniforms.current.lightAmbient[0],
+    lightSpecular: uniforms.current.lightSpecular[0],
     dirX: uniforms.current.lightDirection[0],
     dirY: uniforms.current.lightDirection[1],
     dirZ: uniforms.current.lightDirection[2],
+    materialDiffuse: normalizeRGB2hex([
+      uniforms.current.materialDiffuse[0],
+      uniforms.current.materialDiffuse[1],
+      uniforms.current.materialDiffuse[2],
+    ]),
+    materialAmbient: uniforms.current.materialAmbient[0],
+    materialSpecular: uniforms.current.materialSpecular[0],
+    shininess: uniforms.current.shininess,
   })
 
   const initProgram = () => {
@@ -97,8 +135,13 @@ const Canvas = () => {
     uLocations.current.uModelViewMatrix = gl.current.getUniformLocation(program.current, 'uModelViewMatrix')
     uLocations.current.uNormalMatrix = gl.current.getUniformLocation(program.current, 'uNormalMatrix')
     uLocations.current.uLightDirection = gl.current.getUniformLocation(program.current, 'uLightDirection')
+    uLocations.current.uLightAmbient = gl.current.getUniformLocation(program.current, 'uLightAmbient')
     uLocations.current.uLightDiffuse = gl.current.getUniformLocation(program.current, 'uLightDiffuse')
+    uLocations.current.uLightSpecular = gl.current.getUniformLocation(program.current, 'uLightSpecular')
+    uLocations.current.uMaterialAmbient = gl.current.getUniformLocation(program.current, 'uMaterialAmbient')
     uLocations.current.uMaterialDiffuse = gl.current.getUniformLocation(program.current, 'uMaterialDiffuse')
+    uLocations.current.uMaterialSpecular = gl.current.getUniformLocation(program.current, 'uMaterialSpecular')
+    uLocations.current.uShininess = gl.current.getUniformLocation(program.current, 'uShininess')
   }
 
   const initLights = () => {
@@ -109,13 +152,33 @@ const Canvas = () => {
       uLocations.current.uLightDirection,
       uniforms.current.lightDirection,
     )
-    gl.current.uniform3fv(
+    gl.current.uniform4fv(
+      uLocations.current.uLightAmbient,
+      uniforms.current.lightAmbient,
+    )
+    gl.current.uniform4fv(
       uLocations.current.uLightDiffuse,
       uniforms.current.lightDiffuse,
     )
-    gl.current.uniform3fv(
+    gl.current.uniform4fv(
+      uLocations.current.uMaterialAmbient,
+      uniforms.current.materialAmbient,
+    )
+    gl.current.uniform4fv(
       uLocations.current.uMaterialDiffuse,
       uniforms.current.materialDiffuse,
+    )
+    gl.current.uniform4fv(
+      uLocations.current.uMaterialSpecular,
+      uniforms.current.materialSpecular,
+    )
+    gl.current.uniform1f(
+      uLocations.current.uShininess,
+      uniforms.current.shininess,
+    )
+    gl.current.uniform4fv(
+      uLocations.current.uLightSpecular,
+      uniforms.current.lightSpecular,
     )
   }
 
@@ -319,17 +382,60 @@ const Canvas = () => {
     }
 
     if (guiData.lightDiffuse !== opts.lightDiffuse) {
-      uniforms.current.lightDiffuse = hex2normalizeRGB(opts.lightDiffuse)
-      gl.current.uniform3fv(
+      uniforms.current.lightDiffuse = [ ...hex2normalizeRGB(opts.lightDiffuse), 1 ]
+      gl.current.uniform4fv(
         uLocations.current.uLightDiffuse,
         uniforms.current.lightDiffuse,
       )
     }
+    if (guiData.lightAmbient !== opts.lightAmbient) {
+      uniforms.current.lightAmbient = [
+        opts.lightAmbient, opts.lightAmbient, opts.lightAmbient, opts.lightAmbient,
+      ]
+      gl.current.uniform4fv(
+        uLocations.current.uLightAmbient,
+        uniforms.current.lightAmbient,
+      )
+    }
+    if (guiData.lightSpecular !== opts.lightSpecular) {
+      uniforms.current.lightSpecular = [
+        opts.lightSpecular, opts.lightSpecular, opts.lightSpecular, opts.lightSpecular,
+      ]
+      gl.current.uniform4fv(
+        uLocations.current.uLightSpecular,
+        uniforms.current.lightSpecular,
+      )
+    }
     if (guiData.materialDiffuse !== opts.materialDiffuse) {
-      uniforms.current.materialDiffuse = hex2normalizeRGB(opts.materialDiffuse)
-      gl.current.uniform3fv(
+      uniforms.current.materialDiffuse = [ ...hex2normalizeRGB(opts.materialDiffuse), 1 ]
+      gl.current.uniform4fv(
         uLocations.current.uMaterialDiffuse,
         uniforms.current.materialDiffuse,
+      )
+    }
+    if (guiData.materialAmbient !== opts.materialAmbient) {
+      uniforms.current.materialAmbient = [
+        opts.materialAmbient, opts.materialAmbient, opts.materialAmbient, opts.materialAmbient,
+      ]
+      gl.current.uniform4fv(
+        uLocations.current.uMaterialAmbient,
+        uniforms.current.materialAmbient,
+      )
+    }
+    if (guiData.materialSpecular !== opts.materialSpecular) {
+      uniforms.current.materialSpecular = [
+        opts.materialSpecular, opts.materialSpecular, opts.materialSpecular, opts.materialSpecular,
+      ]
+      gl.current.uniform4fv(
+        uLocations.current.uMaterialSpecular,
+        uniforms.current.materialSpecular,
+      )
+    }
+    if (guiData.shininess !== opts.shininess) {
+      uniforms.current.shininess = opts.shininess
+      gl.current.uniform1f(
+        uLocations.current.uShininess,
+        uniforms.current.shininess,
       )
     }
     setGuiData(opts)
