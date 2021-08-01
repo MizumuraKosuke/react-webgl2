@@ -1,7 +1,7 @@
-import { createRef, useEffect, useRef } from 'react'
+import { createRef, useEffect, useRef, useState } from 'react'
 import { mat4 } from 'gl-matrix'
 
-import GUI from '../../gui'
+import GUI from './gui'
 import useSteUp from '../../../hooks/useSetup'
 
 import vt from './ch03.vert'
@@ -9,6 +9,14 @@ import fg from './ch03.frag'
 import sphere from './sphere.json'
 
 const { vertices, indices } = sphere
+
+interface Opts {
+  materialDiffuse: string
+  lightDiffuse: string
+  dirX: number
+  dirY: number
+  dirZ: number
+}
 
 interface Uniforms {
   modelViewMatrix: mat4
@@ -28,6 +36,13 @@ interface UniformLocations {
 }
 
 const Canvas = () => {
+  const {
+    setProgram,
+    calculateNormals,
+    hex2normalizeRGB,
+    normalizeRGB2hex,
+  } = useSteUp()
+
   const canvas = createRef<HTMLCanvasElement>()
   const gl = useRef<WebGL2RenderingContext | null>()
   const program = useRef<WebGLProgram | null>()
@@ -52,7 +67,13 @@ const Canvas = () => {
     uMaterialDiffuse: null,
   })
 
-  const { setProgram, calculateNormals } = useSteUp()
+  const [ guiData, setGuiData ] = useState({
+    materialDiffuse: normalizeRGB2hex(uniforms.current.materialDiffuse),
+    lightDiffuse: normalizeRGB2hex(uniforms.current.lightDiffuse),
+    dirX: uniforms.current.lightDirection[0],
+    dirY: uniforms.current.lightDirection[1],
+    dirZ: uniforms.current.lightDirection[2],
+  })
 
   const initProgram = () => {
     if (!gl.current) {
@@ -223,6 +244,11 @@ const Canvas = () => {
     canvas.current.height = window.innerHeight * dpr
   }
 
+  const render = () => {
+    requestAnimationFrame(render)
+    draw()
+  }
+
   const init = () => {
     if (!canvas.current) {
       alert('Sorry! No HTML5 Canvas was found on this page')
@@ -242,7 +268,7 @@ const Canvas = () => {
     initProgram()
     initBuffers()
     initLights()
-    draw()
+    render()
 
     window.addEventListener('resize', setCanvasSize)
 
@@ -251,18 +277,54 @@ const Canvas = () => {
     }
   }
 
+  const onUpdateDat = (opts: Opts) => {
+    if (!gl.current || !program.current) {
+      return
+    }
+
+    if (
+      guiData.dirX !== opts.dirX
+      || guiData.dirY !== opts.dirY
+      || guiData.dirZ !== opts.dirZ
+    ) {
+      uniforms.current.lightDirection = [ opts.dirX, opts.dirY, opts.dirZ ]
+      gl.current.uniform3fv(
+        uLocations.current.uLightDirection,
+        uniforms.current.lightDirection,
+      )
+    }
+
+    if (guiData.lightDiffuse !== opts.lightDiffuse) {
+      uniforms.current.lightDiffuse = hex2normalizeRGB(opts.lightDiffuse)
+      gl.current.uniform3fv(
+        uLocations.current.uLightDiffuse,
+        uniforms.current.lightDiffuse,
+      )
+    }
+    if (guiData.materialDiffuse !== opts.materialDiffuse) {
+      uniforms.current.materialDiffuse = hex2normalizeRGB(opts.materialDiffuse)
+      gl.current.uniform3fv(
+        uLocations.current.uMaterialDiffuse,
+        uniforms.current.materialDiffuse,
+      )
+    }
+    setGuiData(opts)
+  }
+
   useEffect(() => {
     init()
   }, [])
 
   return (
-    <div className="fixed inset-0 -z-1 bg-white pointer-events-none">
-      <canvas
-        ref={canvas}
-        className="w-full h-full"
-      />
-      <GUI setOpts={{}} opts={{}} />
-    </div>
+    <>
+      <div className="fixed inset-0 -z-1 bg-white pointer-events-none">
+        <canvas
+          ref={canvas}
+          className="w-full h-full"
+        />
+      </div>
+      <GUI setOpts={onUpdateDat} opts={guiData} />
+    </>
   )
 }
 
