@@ -26,8 +26,11 @@ void main(void) {
   // Calculate the normal vector
   vec3 N = vec3(uNormalMatrix * vec4(aVertexNormal, 1.0));
 
+  // Attach the light to the model transformation matrix
+  vec3 light = vec3(uModelViewMatrix * vec4(uLightDirection, 0.));
+
   // Normalized light direction
-  vec3 L = normalize(uLightDirection);
+  vec3 L = normalize(light);
 
   // Dot product of the normal product and negative light direction vector
   float lambertTerm = dot(N, -L);
@@ -41,10 +44,9 @@ void main(void) {
 
   if (lambertTerm > 0.0) {
     Id = uLightDiffuse * uMaterialDiffuse * lambertTerm;
-    vec3 eyeVec = -vec3(vertex.xyz);
-    vec3 E = normalize(eyeVec);
-    vec3 R = reflect(L, N);
-    float specular = pow(max(dot(R, E), 0.0), uShininess);
+    vec3 eyeVector = normalize(-vec3(vertex.xyz));
+    vec3 lightReflection = reflect(L, N);
+    float specular = pow(max(dot(lightReflection, eyeVector), 0.0), uShininess);
     Is = uLightSpecular * uMaterialSpecular * specular;
   }
 
