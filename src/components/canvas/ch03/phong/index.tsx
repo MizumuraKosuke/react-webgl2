@@ -4,8 +4,10 @@ import { mat4 } from 'gl-matrix'
 import GUI from './gui'
 import useSteUp from '../../../../hooks/useSetup'
 
-import vt from './goraudPhong.vert'
-import fg from './goraudPhong.frag'
+import goraudVt from './goraudPhong.vert'
+import goraudFg from './goraudPhong.frag'
+import phongVt from './phongPhong.vert'
+import phongFg from './phongPhong.frag'
 import sphere from '../sphere.json'
 
 const { vertices, indices } = sphere
@@ -50,11 +52,15 @@ interface UniformLocations {
   uShininess: WebGLUniformLocation | null
 }
 
+interface Props {
+  shading: 'phong' | 'goraud'
+}
+
 // sync with essl layout
 const aVertexPosition = 0
 const aVertexNormal = 1
 
-const Canvas = () => {
+const Canvas = ({ shading }: Props) => {
   const {
     setProgram,
     calculateNormals,
@@ -129,7 +135,9 @@ const Canvas = () => {
       return
     }
 
-    setProgram(vt, fg, gl.current, program.current)
+    shading === 'goraud'
+      ? setProgram(goraudVt, goraudFg, gl.current, program.current)
+      : setProgram(phongVt, phongFg, gl.current, program.current)
 
     uLocations.current.uProjectionMatrix = gl.current.getUniformLocation(program.current, 'uProjectionMatrix')
     uLocations.current.uModelViewMatrix = gl.current.getUniformLocation(program.current, 'uModelViewMatrix')
