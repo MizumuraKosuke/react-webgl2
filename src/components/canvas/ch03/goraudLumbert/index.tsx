@@ -2,11 +2,11 @@ import { createRef, useEffect, useRef, useState } from 'react'
 import { mat4 } from 'gl-matrix'
 
 import GUI from './gui'
-import useSteUp from '../../../hooks/useSetup'
+import useSteUp from '../../../../hooks/useSetup'
 
-import vt from './ch03.vert'
-import fg from './ch03.frag'
-import sphere from './sphere.json'
+import vt from './groudLumbert.vert'
+import fg from './groudLumbert.frag'
+import sphere from '../sphere.json'
 
 const { vertices, indices } = sphere
 

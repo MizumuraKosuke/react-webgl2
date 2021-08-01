@@ -1,9 +1,9 @@
 import Ch02View from '../views/ch02'
 
-const Home = () => {
+const Ch02 = () => {
   return (
     <Ch02View />
   )
 }
 
-export default Home
+export default Ch02

@@ -7,7 +7,7 @@ const Home = () => {
         O&apos;REILLY<br />初めてのWebGL 2 with Next.js
       </h1>
       <ul>
-        <li className="mb-2">
+        <li className="pb-2">
           <Link href="/ch02">
             <a>
               <span>chart 2. レンダリング</span>
@@ -15,11 +15,14 @@ const Home = () => {
           </Link>
         </li>
         <li>
-          <Link href="/ch03">
-            <a>
-              <span>chart 3. 光源</span>
-            </a>
-          </Link>
+          <span className="pb-2">chart 3. 光源</span>
+          <li className="pl-2">
+            <Link href="/ch03/goraudLambert">
+              <a>
+                <span>ランバート反射を伴うグローシェーディング</span>
+              </a>
+            </Link>
+          </li>
         </li>
       </ul>
     </main>
