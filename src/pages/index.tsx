@@ -16,13 +16,15 @@ const Home = () => {
         </li>
         <li>
           <span className="pb-2">chart 3. 光源</span>
-          <li className="pl-2">
-            <Link href="/ch03/goraudLambert">
-              <a>
-                <span>ランバート反射を伴うグローシェーディング</span>
-              </a>
-            </Link>
-          </li>
+          <ul>
+            <li className="pl-2">
+              <Link href="/ch03/goraudLambert">
+                <a>
+                  <span>ランバート反射を伴うグローシェーディング</span>
+                </a>
+              </Link>
+            </li>
+          </ul>
         </li>
       </ul>
     </main>
