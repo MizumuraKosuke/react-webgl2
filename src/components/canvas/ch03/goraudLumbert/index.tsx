@@ -47,6 +47,8 @@ const Canvas = () => {
   const gl = useRef<WebGL2RenderingContext | null>()
   const program = useRef<WebGLProgram | null>()
   const sphereVAO = useRef<WebGLVertexArrayObject | null>()
+  const lastTime = useRef<number | null>(null)
+  const angle = useRef(0)
 
   // uniform
   const uniforms = useRef<Uniforms>({
@@ -191,6 +193,11 @@ const Canvas = () => {
       uniforms.current.modelViewMatrix,
       [ 0, 0, -1.5 ],
     )
+    mat4.rotate(
+      uniforms.current.modelViewMatrix, 
+      uniforms.current.modelViewMatrix,
+      angle.current * Math.PI / 180, [ 0, 1, 0 ],
+    )
     mat4.perspective(
       uniforms.current.projectionMatrix,
       45,
@@ -198,9 +205,18 @@ const Canvas = () => {
       0.1,
       10000,
     )
-    mat4.copy(uniforms.current.normalMatrix, uniforms.current.modelViewMatrix)
-    mat4.invert(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
-    mat4.transpose(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
+    mat4.copy(
+      uniforms.current.normalMatrix,
+      uniforms.current.modelViewMatrix,
+    )
+    mat4.invert(
+      uniforms.current.normalMatrix,
+      uniforms.current.normalMatrix,
+    )
+    mat4.transpose(
+      uniforms.current.normalMatrix,
+      uniforms.current.normalMatrix,
+    )
 
     gl.current.uniformMatrix4fv(
       uLocations.current.uModelViewMatrix,
@@ -247,6 +263,12 @@ const Canvas = () => {
   const render = () => {
     requestAnimationFrame(render)
     draw()
+    const timeNow = new Date().getTime()
+    if (lastTime.current) {
+      const elapsed = timeNow - lastTime.current
+      angle.current += (90 * elapsed) / 1000.0
+    }
+    lastTime.current = timeNow
   }
 
   const init = () => {
