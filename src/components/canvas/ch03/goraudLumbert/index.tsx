@@ -35,6 +35,10 @@ interface UniformLocations {
   uMaterialDiffuse: WebGLUniformLocation | null
 }
 
+// sync with essl layout
+const aVertexPosition = 0
+const aVertexNormal = 1
+
 const Canvas = () => {
   const {
     setProgram,
@@ -136,7 +140,6 @@ const Canvas = () => {
       gl.current.STATIC_DRAW,
     )
 
-    const aVertexPosition = gl.current.getAttribLocation(program.current, 'aVertexPosition')
     gl.current.enableVertexAttribArray(aVertexPosition)
     gl.current.vertexAttribPointer(aVertexPosition, 3, gl.current.FLOAT, false, 0, 0)
 
@@ -154,7 +157,6 @@ const Canvas = () => {
       gl.current.STATIC_DRAW,
     )
     
-    const aVertexNormal = gl.current.getAttribLocation(program.current, 'aVertexNormal')
     gl.current.enableVertexAttribArray(aVertexNormal)
     gl.current.vertexAttribPointer(aVertexNormal, 3, gl.current.FLOAT, false, 0, 0)
 
