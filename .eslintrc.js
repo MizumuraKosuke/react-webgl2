@@ -22,6 +22,11 @@ module.exports = {
     'jsx-a11y',
     '@typescript-eslint',
   ],
+  'settings': {
+    'react': {
+      'version': 'detect',
+    },
+  },
   'rules': {
     'comma-dangle': [ 'error', 'always-multiline' ],
     'arrow-parens': [ 'warn', 'always' ],

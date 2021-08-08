@@ -40,6 +40,13 @@ const Home = () => {
             </li>
           </ul>
         </li>
+        <li className="pb-2">
+          <Link href="/ch04/camera">
+            <a>
+              <span>chart 4. カメラ</span>
+            </a>
+          </Link>
+        </li>
       </ul>
     </main>
   )
