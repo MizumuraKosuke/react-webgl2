@@ -4,6 +4,9 @@ import { mat4 } from 'gl-matrix'
 import GUI from './gui'
 import useSteUp from '../../../../hooks/useSetup'
 
+import calculateNormals from '../../../../utils/caluculateNormals'
+import { hex2normalizeRGB, normalizeRGB2hex } from '../../../../utils/convertColor'
+
 import goraudVt from './goraudPhong.vert'
 import goraudFg from './goraudPhong.frag'
 import phongVt from './phongPhong.vert'
@@ -63,9 +66,6 @@ const aVertexNormal = 1
 const Canvas = ({ shading }: Props) => {
   const {
     setProgram,
-    calculateNormals,
-    hex2normalizeRGB,
-    normalizeRGB2hex,
   } = useSteUp()
 
   const canvas = createRef<HTMLCanvasElement>()

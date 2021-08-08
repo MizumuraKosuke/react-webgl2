@@ -4,6 +4,9 @@ import { mat4 } from 'gl-matrix'
 import GUI from './gui'
 import useSteUp from '../../../../hooks/useSetup'
 
+import calculateNormals from '../../../../utils/caluculateNormals'
+import { hex2normalizeRGB, normalizeRGB2hex } from '../../../../utils/convertColor'
+
 import vt from './goraudLumbert.vert'
 import fg from './goraudLumbert.frag'
 import sphere from '../sphere.json'
@@ -42,9 +45,6 @@ const aVertexNormal = 1
 const Canvas = () => {
   const {
     setProgram,
-    calculateNormals,
-    hex2normalizeRGB,
-    normalizeRGB2hex,
   } = useSteUp()
 
   const canvas = createRef<HTMLCanvasElement>()
