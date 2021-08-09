@@ -2,7 +2,13 @@ import { useRef } from 'react'
 
 import { ObjectType } from '../../interfaces/objects'
 
-const useAxis: () => ObjectType = () => {
+const useAxis: (
+  data: {
+    vertices: number[]
+    indices: number[]
+    diffuse?: number[]
+  }
+) => ObjectType = (data) => {
   const ibo = useRef<WebGLBuffer | null>(null)
   const vao = useRef<WebGLVertexArrayObject | null>(null)
   const vertices = useRef<number[]>([])
@@ -13,11 +19,7 @@ const useAxis: () => ObjectType = () => {
   const specular = useRef<number[]>([ 1, 1, 1, 1 ])
   const wireframe = useRef<boolean>(false)
 
-  const build = (data: {
-    vertices: number[]
-    indices: number[]
-    diffuse?: number[]
-  }) => {
+  const build = () => {
     vertices.current = data.vertices
     indices.current = data.indices
     if (data.diffuse) {

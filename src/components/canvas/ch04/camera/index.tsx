@@ -4,7 +4,7 @@ import { mat4 } from 'gl-matrix'
 import GUI, { Opts } from './gui'
 import useSteUp from '../../../../hooks/useSetup'
 
-import Cone from '../cone3.json'
+import Cone3 from '../cone3.json'
 
 import useCamera from '../../../../hooks/models/camera'
 import useFloor from '../../../../hooks/models/floor'
@@ -50,7 +50,7 @@ const Canvas = () => {
   const camera = useCamera()
   const floor = useFloor()
   const axis = useAxis()
-  const cone = useLoadJson()
+  const cone = useLoadJson(Cone3)
 
   const canvas = createRef<HTMLCanvasElement>()
   const gl = useRef<WebGL2RenderingContext | null>(null)
@@ -143,7 +143,7 @@ const Canvas = () => {
     axis.build({ dimension: 82 })
     setBuffers(gl.current, axis, aLocations)
 
-    cone.build(Cone)
+    cone.build()
     setBuffers(gl.current, cone, aLocations)
   }
 

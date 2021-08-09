@@ -24,7 +24,8 @@ interface Hooks {
   drawBuffers: (
     gl: WebGL2RenderingContext | null,
     object: ObjectType,
-    uniform: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    uniforms: any,
   ) => void
 }
 
@@ -190,6 +191,7 @@ const useSetup: () => Hooks = () => {
   const drawBuffers = (
     gl: WebGL2RenderingContext | null,
     object: ObjectType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     uniforms: any,
   ) => {
     if (!gl) {

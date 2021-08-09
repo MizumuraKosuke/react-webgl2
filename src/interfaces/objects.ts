@@ -3,7 +3,8 @@ import { MutableRefObject } from 'react'
 export interface ObjectType {
   ibo: MutableRefObject<WebGLBuffer | null>
   vao: MutableRefObject<WebGLVertexArrayObject | null>
-  build: (data: any) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  build: (data?: any) => void
   vertices: MutableRefObject<number[]>
   indices: MutableRefObject<number[]>
   wireframe?: MutableRefObject<boolean>
