@@ -18,11 +18,9 @@ interface Uniforms {
   modelViewMatrix: mat4
   projectionMatrix: mat4
   normalMatrix: mat4
-  materialDiffuse: [ number, number, number, number ]
   lightAmbient: [ number, number, number, number ]
   lightDiffuse: [ number, number, number, number ]
   lightPosition: [ number, number, number ]
-  wireframe: boolean
 }
 interface UniformLocations {
   uProjectionMatrix: WebGLUniformLocation | null
@@ -58,18 +56,17 @@ const Canvas = () => {
   const gl = useRef<WebGL2RenderingContext | null>(null)
   const program = useRef<WebGLProgram | null>(null)
 
-  // uniform
+  // uniform(ワールドで共通のもののみ）)
   const uniforms = useRef<Uniforms>({
     modelViewMatrix: mat4.create(),
     projectionMatrix: mat4.create(),
     normalMatrix: mat4.create(),
-    materialDiffuse: [ 1, 1, 1, 1 ],
     lightAmbient: [ 0.20, 0.20, 0.20, 1 ],
     lightDiffuse: [ 1, 1, 1, 1 ],
     lightPosition: [ 0, 120, 120 ],
-    wireframe: false,
   })
 
+  // uniformのロケーション参照用
   const uLocations = useRef<UniformLocations>({
     uModelViewMatrix: null,
     uProjectionMatrix: null,
@@ -125,7 +122,8 @@ const Canvas = () => {
     )
   }
 
-  const updateTransforms = () => {
+  const initCamera = () => {
+    camera.goHome()
     if (!gl.current) {
       return
     }
@@ -136,17 +134,6 @@ const Canvas = () => {
       camera.minZ.current,
       camera.maxZ.current,
     )
-  }
-
-  const initCamera = () => {
-    camera.goHome()
-    uniforms.current.modelViewMatrix = camera.getViewTransform()
-    mat4.identity(uniforms.current.projectionMatrix)
-    updateTransforms()
-    mat4.identity(uniforms.current.normalMatrix)
-    mat4.copy(uniforms.current.normalMatrix, uniforms.current.modelViewMatrix)
-    mat4.invert(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
-    mat4.transpose(uniforms.current.normalMatrix, uniforms.current.normalMatrix)
   }
 
   const initStaticObjects = async () => {
@@ -160,22 +147,23 @@ const Canvas = () => {
     setBuffers(gl.current, cone, aLocations)
   }
 
-  const setMatrixUniforms = () => {
+  const updateUniforms = () => {
     if (!gl.current) {
       return
     }
 
+    uniforms.current.modelViewMatrix = camera.getViewTransform()
     gl.current.uniformMatrix4fv(
       uLocations.current.uModelViewMatrix,
       false,
-      camera.getViewTransform(),
+      uniforms.current.modelViewMatrix,
     )
     gl.current.uniformMatrix4fv(
       uLocations.current.uProjectionMatrix,
       false,
       uniforms.current.projectionMatrix,
     )
-    mat4.transpose(uniforms.current.normalMatrix, camera.matrix.current)
+    uniforms.current.normalMatrix = camera.getNormalTransform()
     gl.current.uniformMatrix4fv(
       uLocations.current.uNormalMatrix,
       false,
@@ -191,51 +179,15 @@ const Canvas = () => {
     gl.current.clear(gl.current.COLOR_BUFFER_BIT | gl.current.DEPTH_BUFFER_BIT)
     gl.current.viewport(0, 0, gl.current.canvas.width, gl.current.canvas.height)
 
-    updateTransforms()
-    setMatrixUniforms()
+    updateUniforms()
 
     drawBuffers(gl.current, floor, uLocations.current)
     drawBuffers(gl.current, axis, uLocations.current)
     drawBuffers(gl.current, cone, uLocations.current)
   }
 
-  const render = () => {
-    requestAnimationFrame(render)
-    draw()
-  }
-
-  const init = () => {
-    if (!canvas.current) {
-      alert('Sorry! No HTML5 Canvas was found on this page')
-      return
-    }
-
-    gl.current = canvas.current?.getContext('webgl2')
-
-    if (!gl.current) {
-      alert('Sorry! WebGL is not available')
-      return
-    }
-
-    setCanvasSize(canvas.current)
-
-    gl.current.enable(gl.current.DEPTH_TEST)
-    gl.current.depthFunc(gl.current.LEQUAL)
-
-    initProgram()
-    initLights()
-    initCamera()
-    initStaticObjects()
-    render()
-
-    const onResize = () => setCanvasSize(canvas.current)
-    window.addEventListener('resize', onResize)
-    return () => {
-      window.removeEventListener('resize', onResize)
-    }
-  }
-
-  const onUpdateDat = (opts: Opts) => {
+  // dat-gui操作によるuniformの更新
+  const onUpdateGui = (opts: Opts) => {
     if (!gl.current) {
       return
     }
@@ -261,7 +213,46 @@ const Canvas = () => {
       camera.setAzimuth(opts.azimuth)
     }
 
+    draw()
     setGuiData(opts)
+  }
+
+  const render = () => {
+    // gui操作でしかview更新しないので。。
+    // requestAnimationFrame(render)
+    draw()
+  }
+
+  const init = () => {
+    if (!canvas.current) {
+      alert('Sorry! No HTML5 Canvas was found on this page')
+      return
+    }
+
+    gl.current = canvas.current?.getContext('webgl2')
+
+    if (!gl.current) {
+      alert('Sorry! WebGL is not available')
+      return
+    }
+
+    setCanvasSize(canvas.current)
+
+    gl.current.enable(gl.current.DEPTH_TEST)
+    gl.current.depthFunc(gl.current.LEQUAL)
+
+    initProgram()
+    initLights()
+    initCamera()
+    initStaticObjects()
+
+    render()
+
+    const onResize = () => setCanvasSize(canvas.current)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+    }
   }
 
   useEffect(() => {
@@ -277,7 +268,7 @@ const Canvas = () => {
         />
       </div>
       <GUI
-        setOpts={onUpdateDat}
+        setOpts={onUpdateGui}
         opts={guiData}
         goHome={() => camera.goHome()}
       />

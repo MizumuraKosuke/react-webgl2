@@ -22,6 +22,7 @@ interface Hooks {
   dolly: (stepIncrement: number) => void
   goHome: (newHome?: vec3) => void
   getViewTransform: () => mat4,
+  getNormalTransform: () => mat4,
 }
 
 const home = [ 0, 7, 36 ] as vec3
@@ -131,9 +132,17 @@ const useCamera: () => Hooks = () => {
     setElevation(0)
   }
 
+  // モデルビュー行列の逆行列 = カメラ行列
   const getViewTransform = () => {
     const mat = mat4.create()
     mat4.invert(mat, matrix.current)
+    return mat
+  }
+
+  // 法線行列 = モデルビュー行列の逆行列(=カメラ行列)の転置
+  const getNormalTransform = () => {
+    const mat = mat4.create()
+    mat4.transpose(mat, matrix.current)
     return mat
   }
 
@@ -158,6 +167,7 @@ const useCamera: () => Hooks = () => {
     setAzimuth,
     setElevation,
     getViewTransform,
+    getNormalTransform,
   }
 }
 
