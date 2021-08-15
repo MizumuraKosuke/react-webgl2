@@ -1,7 +1,7 @@
 import { useRef, MutableRefObject } from 'react'
 import { mat4, vec3, vec4 } from 'gl-matrix'
 
-interface Hooks {
+export interface Camera {
   type: MutableRefObject<'ORBITING_TYPE' | 'TRACKING_TYPE'>
   position: MutableRefObject<vec3>
   upAxis: MutableRefObject<vec3>
@@ -25,7 +25,7 @@ interface Hooks {
 }
 
 const home = [ 0, 7, 36 ] as vec3
-const useCamera: () => Hooks = () => {
+const useCamera: () => Camera = () => {
   const type = useRef<'ORBITING_TYPE' | 'TRACKING_TYPE'>('ORBITING_TYPE')
   
   const upAxis = useRef(vec3.create())

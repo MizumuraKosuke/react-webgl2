@@ -47,6 +47,18 @@ const Home = () => {
             </a>
           </Link>
         </li>
+        <li>
+          <span className="pb-2">chart 5. アニメーション</span>
+          <ul>
+            <li className="pl-2">
+              <Link href="/ch05/bouncingBalls">
+                <a>
+                  <span>バウンドするボール</span>
+                </a>
+              </Link>
+            </li>
+          </ul>
+        </li>
       </ul>
     </main>
   )
